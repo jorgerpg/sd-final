@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card card-center shadow">
+  <div class="card-body">
+
+    <h3 class="text-center mb-4">Entrar</h3>
+
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+
+      <div class="mb-3">
+        <label>Email</label>
+        <input class="form-control" name="email" placeholder="exemplo@email.com">
+      </div>
+
+      <div class="mb-3">
+        <label>Senha</label>
+        <input type="password" class="form-control" name="password">
+      </div>
+
+      <button class="btn btn-primary w-100">Entrar</button>
+    </form>
+
+    <hr>
+    <p class="text-center">
+      Não tem conta?
+      <a href="/register">Registrar</a>
+    </p>
+  </div>
+</div>
+
+{% endblock %}

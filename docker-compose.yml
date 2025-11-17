@@ -38,6 +38,15 @@ services:
     networks:
       - backend-net
 
+  frontend:
+    build: ./frontend
+    container_name: sorteio-frontend
+    networks:
+      - backend-net
+    depends_on:
+      - api-sorteio-1
+      - api-sorteio-2
+
   # Proxy Nginx com Load Balancer
   nginx:
     image: nginx:latest
@@ -50,6 +59,7 @@ services:
     depends_on:
       - api-sorteio-1
       - api-sorteio-2
+      - frontend
     networks:
       - backend-net
 
