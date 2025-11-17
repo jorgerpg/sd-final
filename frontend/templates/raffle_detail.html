@@ -1,38 +1,176 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="card shadow-sm">
-  <div class="card-body">
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h3 class="mb-1">{{ raffle.title }}</h3>
+            <p class="text-muted mb-2">{{ raffle.description }}</p>
+          </div>
+          <span class="badge {% if raffle.status == 'FINISHED' %}bg-success{% else %}bg-info{% endif %}"
+                id="raffle-status">{{ raffle.status }}</span>
+        </div>
 
-    <h3>{{ raffle.title }}</h3>
-    <p class="text-muted">{{ raffle.description }}</p>
+        <div id="winner-section"
+             class="alert alert-success mt-3 {% if not raffle.winner %}d-none{% endif %}">
+          <h5 class="mb-2">🎉 Vencedor:</h5>
+          <p class="mb-0 fw-semibold" id="winner-name">
+            {{ raffle.winner.name if raffle.winner }}
+          </p>
+          <small class="text-muted" id="winner-email">
+            {{ raffle.winner.email if raffle.winner }}
+          </small>
+        </div>
 
-    <p>Status:
-      <span class="badge bg-info">{{ raffle.status }}</span>
-    </p>
+        <hr>
 
-    <!-- SE TEM VENCEDOR -->
-    {% if raffle.winner %}
-    <div class="alert alert-success mt-3">
-      <h5>🎉 Vencedor:</h5>
-      <p><strong>{{ raffle.winner.name }}</strong></p>
-      <p class="text-muted">{{ raffle.winner.email }}</p>
+        <div class="d-grid gap-2" id="actions-wrapper">
+          <form id="join-form"
+                method="POST"
+                action="/raffles/{{ raffle.id }}/join"
+                class="{% if raffle.status != 'OPEN' %}d-none{% endif %}">
+            <button class="btn btn-primary w-100">Participar</button>
+          </form>
+
+          <form id="start-form"
+                method="POST"
+                action="/raffles/{{ raffle.id }}/start"
+                class="{% if raffle.status != 'OPEN' %}d-none{% endif %}">
+            <button class="btn btn-warning w-100">Iniciar Sorteio</button>
+          </form>
+        </div>
+      </div>
     </div>
-    {% endif %}
+  </div>
 
-    <hr>
+  <div class="col-lg-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">Participantes</h5>
+          <span class="badge text-bg-light" id="participant-count">
+            {{ raffle.participants|length if raffle.participants else 0 }}
+          </span>
+        </div>
 
-    {% if raffle.status == "OPEN" %}
-      <form method="POST" action="/raffles/{{ raffle.id }}/join" class="mb-2">
-        <button class="btn btn-primary w-100">Participar</button>
-      </form>
+        <p id="participants-empty"
+           class="text-muted {% if raffle.participants %}d-none{% endif %}">
+          Ainda não há participantes neste sorteio.
+        </p>
 
-      <form method="POST" action="/raffles/{{ raffle.id }}/start">
-        <button class="btn btn-warning w-100">Iniciar Sorteio</button>
-      </form>
-    {% endif %}
-
+        <ul class="list-group list-group-flush"
+            id="participant-list">
+          {% for participant in raffle.participants %}
+          <li class="list-group-item d-flex flex-column">
+            <span class="fw-semibold">{{ participant.user.name }}</span>
+            <small class="text-muted">{{ participant.user.email }}</small>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
   </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const initialData = {{ raffle|tojson }};
+  const statusBadge = document.getElementById("raffle-status");
+  const winnerSection = document.getElementById("winner-section");
+  const winnerName = document.getElementById("winner-name");
+  const winnerEmail = document.getElementById("winner-email");
+  const participantList = document.getElementById("participant-list");
+  const participantCount = document.getElementById("participant-count");
+  const participantsEmpty = document.getElementById("participants-empty");
+  const joinForm = document.getElementById("join-form");
+  const startForm = document.getElementById("start-form");
+
+  if (!initialData || !statusBadge) {
+    return;
+  }
+
+  const STATUS_BADGES = {
+    OPEN: "bg-info",
+    FINISHED: "bg-success",
+    RUNNING: "bg-warning"
+  };
+
+  function updateStatus(status) {
+    statusBadge.textContent = status;
+    statusBadge.className = "badge " + (STATUS_BADGES[status] || "bg-secondary");
+
+    const isOpen = status === "OPEN";
+    if (joinForm) joinForm.classList.toggle("d-none", !isOpen);
+    if (startForm) startForm.classList.toggle("d-none", !isOpen);
+  }
+
+  function updateWinner(winner) {
+    if (winner) {
+      winnerSection.classList.remove("d-none");
+      winnerName.textContent = winner.name;
+      winnerEmail.textContent = winner.email;
+    } else {
+      winnerSection.classList.add("d-none");
+      winnerName.textContent = "";
+      winnerEmail.textContent = "";
+    }
+  }
+
+  function buildParticipantRow(participant) {
+    const li = document.createElement("li");
+    li.className = "list-group-item d-flex flex-column";
+    const name = document.createElement("span");
+    name.className = "fw-semibold";
+    name.textContent = participant.user.name;
+    const email = document.createElement("small");
+    email.className = "text-muted";
+    email.textContent = participant.user.email;
+    li.appendChild(name);
+    li.appendChild(email);
+    return li;
+  }
+
+  function updateParticipants(participants) {
+    participantList.innerHTML = "";
+    if (!participants || participants.length === 0) {
+      participantsEmpty.classList.remove("d-none");
+      participantCount.textContent = 0;
+      return;
+    }
+
+    participantsEmpty.classList.add("d-none");
+    participantCount.textContent = participants.length;
+    participants.forEach((participant) => {
+      participantList.appendChild(buildParticipantRow(participant));
+    });
+  }
+
+  function updateView(data) {
+    updateStatus(data.status);
+    updateWinner(data.winner);
+    updateParticipants(data.participants || []);
+  }
+
+  updateView(initialData);
+
+  async function pollRaffle() {
+    try {
+      const response = await fetch(`/api/raffles/${initialData.id}`);
+      if (!response.ok) return;
+      const payload = await response.json();
+      updateView(payload);
+    } catch (error) {
+      console.error("Erro ao atualizar sorteio", error);
+    }
+  }
+
+  setInterval(pollRaffle, 3000);
+})();
+</script>
 {% endblock %}

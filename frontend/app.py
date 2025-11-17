@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, url_for, abort
 import requests
 import os
 
@@ -78,6 +78,8 @@ def raffles():
 @app.route("/raffles/<int:rid>")
 def raffle_detail(rid):
     resp = requests.get(f"{BACKEND_URL}/raffles/{rid}")
+    if resp.status_code != 200:
+        abort(resp.status_code)
     raffle = resp.json()
     return render_template("raffle_detail.html", raffle=raffle)
 # ---------------------- CRIAR ----------------------

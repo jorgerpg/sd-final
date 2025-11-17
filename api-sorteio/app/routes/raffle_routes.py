@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify
+
+from app.models import RaffleParticipant
 from app.services import raffle_service
 from app.repositories.user_repo import get_user_by_id
 from app.utils import decode_jwt
-from app.models import RaffleParticipant
 
 bp = Blueprint("raffle", __name__, url_prefix="/api/raffles")
 
@@ -102,11 +103,24 @@ def get_raffle(rid):
                 "email": p.user.email
             }
 
+    participants = []
+    for participant in sorted(raffle.participants, key=lambda part: part.joined_at):
+        participants.append({
+            "id": participant.id,
+            "joined_at": participant.joined_at.isoformat() if participant.joined_at else None,
+            "user": {
+                "id": participant.user.id,
+                "name": participant.user.name,
+                "email": participant.user.email
+            }
+        })
+
     return jsonify({
         "id": raffle.id,
         "title": raffle.title,
         "description": raffle.description,
         "status": raffle.status,
         "creator_id": raffle.creator_id,
-        "winner": winner
+        "winner": winner,
+        "participants": participants
     })
