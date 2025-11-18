@@ -55,3 +55,13 @@ Opções disponíveis:
 2. Crie um sorteio.
 3. Abra múltiplas abas / usuários para entrar no sorteio.
 4. Observe a atualização em tempo real da tela de detalhes (participantes, status e vencedor).
+5. Apenas o criador visualiza o botão **Iniciar Sorteio**, garantindo que participantes não finalizem o sorteio.
+
+## Filtros e busca
+
+Na página `/raffles` a listagem suporta:
+
+- Campo de busca por título (case-insensitive, aplica-se antes de renderizar os cards).
+- Checkbox “Mostrar apenas meus sorteios” para usuários autenticados, filtrando por `creator_id`.
+
+Ambos filtros funcionam apenas no frontend (a API continua retornando todos os sorteios), então a URL reflete os parâmetros (`/raffles?q=nome&mine=1`) e pode ser compartilhada para reproduzir o mesmo resultado.
