@@ -41,6 +41,8 @@ services:
   frontend:
     build: ./frontend
     container_name: sorteio-frontend
+    volumes:
+      - ./frontend/:/app/
     networks:
       - backend-net
     depends_on:

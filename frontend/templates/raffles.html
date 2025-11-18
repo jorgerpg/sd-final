@@ -1,29 +1,79 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3>Sorteios</h3>
+<div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center mb-4">
+    <div>
+        <h3 class="mb-1">Sorteios</h3>
+        <p class="text-muted mb-0">Busque por título ou visualize somente os seus.</p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+        {% if session.user %}
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCreate">
+          + Criar sorteio
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<form class="card shadow-sm p-3 mb-4" method="GET" action="/raffles">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-6">
+      <label class="form-label text-muted small mb-1" for="search-input">Buscar por nome</label>
+      <input id="search-input"
+             class="form-control"
+             type="text"
+             name="q"
+             placeholder="Digite o título do sorteio"
+             value="{{ filters.q }}">
+    </div>
 
     {% if session.user %}
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCreate">
-      + Criar sorteio
-    </button>
+    <div class="col-md-3 d-flex align-items-center">
+      <div class="form-check mt-3 mt-md-0">
+        <input class="form-check-input"
+               type="checkbox"
+               value="1"
+               id="mine-filter"
+               name="mine"
+               {% if filters.mine %}checked{% endif %}>
+        <label class="form-check-label" for="mine-filter">
+          Mostrar apenas meus sorteios
+        </label>
+      </div>
+    </div>
     {% endif %}
-</div>
+
+    <div class="col-md-3 text-md-end">
+      <button class="btn btn-outline-secondary w-100">
+        Aplicar filtros
+      </button>
+    </div>
+  </div>
+</form>
 
 <div class="row">
 
-{% for r in raffles %}
-  <div class="col-md-4">
-    <div class="card shadow-sm mb-4">
-      <div class="card-body">
-        <h5>{{ r.title }}</h5>
-        <p>Status: <strong>{{ r.status }}</strong></p>
-        <a href="/raffles/{{ r.id }}" class="btn btn-outline-primary w-100">Ver detalhes</a>
+{% if raffles %}
+  {% for r in raffles %}
+    <div class="col-md-4">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5>{{ r.title }}</h5>
+          <p class="mb-1">Status: <strong>{{ r.status }}</strong></p>
+          <small class="text-muted">Criador: {{ r.creator_id }}</small>
+          <a href="/raffles/{{ r.id }}" class="btn btn-outline-primary w-100 mt-3">Ver detalhes</a>
+        </div>
       </div>
     </div>
+  {% endfor %}
+{% else %}
+  <div class="col-12">
+    <div class="alert alert-info">
+      Nenhum sorteio encontrado com os filtros atuais.
+    </div>
   </div>
-{% endfor %}
+{% endif %}
 
 </div>
 

@@ -71,7 +71,34 @@ def register():
 def raffles():
     resp = requests.get(f"{BACKEND_URL}/raffles/")
     raffles = resp.json()
-    return render_template("raffles.html", raffles=raffles)
+
+    search_term = request.args.get("q", "").strip()
+    only_mine = request.args.get("mine") not in (None, "", "0", "false", "False")
+
+    filtered = raffles
+
+    if search_term:
+        lowered = search_term.lower()
+        filtered = [
+            raffle for raffle in filtered
+            if lowered in raffle.get("title", "").lower()
+        ]
+
+    if only_mine and session.get("user"):
+        user_id = session["user"]["id"]
+        filtered = [
+            raffle for raffle in filtered
+            if raffle.get("creator_id") == user_id
+        ]
+    elif only_mine:
+        only_mine = False  # não há usuário logado, então ignora filtro
+
+    filters = {
+        "q": search_term,
+        "mine": only_mine
+    }
+
+    return render_template("raffles.html", raffles=filtered, filters=filters)
 
 # ---------------------- DETALHE ----------------------
 
