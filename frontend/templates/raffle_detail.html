@@ -35,12 +35,14 @@
             <button class="btn btn-primary w-100">Participar</button>
           </form>
 
+          {% if session.user and session.user.id == raffle.creator_id %}
           <form id="start-form"
                 method="POST"
                 action="/raffles/{{ raffle.id }}/start"
                 class="{% if raffle.status != 'OPEN' %}d-none{% endif %}">
             <button class="btn btn-warning w-100">Iniciar Sorteio</button>
           </form>
+          {% endif %}
         </div>
       </div>
     </div>
