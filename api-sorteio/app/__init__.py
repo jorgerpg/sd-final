@@ -1,3 +1,5 @@
+"""Application factory e inicialização da API Flask."""
+
 import time
 
 from flask import Flask
@@ -25,6 +27,7 @@ def wait_for_db(engine, retries=10, delay_sec=1):
 
 
 def create_app():
+    """Factory principal chamada pelo WSGI/CLI para criar a aplicação."""
     app = Flask(__name__)
     app.config.from_object(get_config())
 

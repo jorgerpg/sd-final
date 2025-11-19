@@ -1,3 +1,5 @@
+"""Regras centrais de criação, participação e finalização dos sorteios."""
+
 import random
 from datetime import datetime
 from app.models import Raffle, RaffleParticipant
@@ -6,6 +8,7 @@ from app.extensions import db
 
 
 def create_raffle(creator_id, title, description):
+  """Instancia um `Raffle` e delega a persistência ao repositório."""
   raffle = Raffle(
       title=title,
       description=description,
@@ -15,6 +18,11 @@ def create_raffle(creator_id, title, description):
 
 
 def join_raffle(user_id, raffle_id):
+  """
+  Confere o status do sorteio, evita duplicidades e registra a participação.
+
+  `ValueError` é lançado quando o sorteio está fechado ou o usuário já entrou.
+  """
   raffle = raffle_repo.get_by_id(raffle_id)
 
   if raffle.status != "OPEN":
@@ -32,6 +40,11 @@ def join_raffle(user_id, raffle_id):
 
 
 def start_raffle(creator_id, raffle_id):
+  """
+  Sorteia um vencedor e finaliza o sorteio.
+
+  Apenas o criador pode disparar e é necessário haver participantes.
+  """
   raffle = raffle_repo.get_by_id(raffle_id)
 
   if raffle.creator_id != creator_id:

@@ -1,8 +1,12 @@
+"""Modelos SQLAlchemy que representam as tabelas principais do domínio."""
+
 from datetime import datetime
 from app.extensions import db
 
 
 class User(db.Model):
+    """Representa cada usuário autenticável que pode criar/participar."""
+
     __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -15,6 +19,8 @@ class User(db.Model):
 
 
 class Raffle(db.Model):
+    """Entidade principal do sorteio, com status e referência ao vencedor."""
+
     __tablename__ = "raffles"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -48,6 +54,8 @@ class Raffle(db.Model):
 
 
 class RaffleParticipant(db.Model):
+    """Tabela de junção entre usuários e sorteios, guarda ordem de entrada."""
+
     __tablename__ = "raffle_participants"
 
     id = db.Column(db.Integer, primary_key=True)

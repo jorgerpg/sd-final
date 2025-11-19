@@ -1,3 +1,5 @@
+"""Blueprint que expõe os endpoints do CRUD de sorteios."""
+
 from flask import Blueprint, request, jsonify
 
 from app.models import RaffleParticipant
@@ -9,18 +11,24 @@ bp = Blueprint("raffle", __name__, url_prefix="/api/raffles")
 
 
 def auth_user(request):
+  """
+  Recupera o usuário autenticado a partir do header Authorization.
+
+  Retorna `None` para tokens ausentes/invalidos.
+  """
   token = request.headers.get("Authorization")
   if not token:
     return None
   try:
     data = decode_jwt(token.replace("Bearer ", ""))
     return get_user_by_id(data["user_id"])
-  except:
+  except Exception:
     return None
 
 
 @bp.get("/")
 def list_raffles():
+  """Retorna uma listagem simples de sorteios."""
   from app.repositories.raffle_repo import get_all
   raffles = get_all()
   return jsonify([
@@ -35,6 +43,7 @@ def list_raffles():
 
 @bp.post("/")
 def create_raffle():
+  """Cria um novo sorteio, exigindo usuário autenticado."""
   user = auth_user(request)
   if not user:
     return jsonify({"error": "Unauthorized"}), 401
@@ -47,6 +56,7 @@ def create_raffle():
 
 @bp.post("/<int:rid>/join")
 def join_raffle(rid):
+  """Inscreve o usuário corrente no sorteio indicado."""
   user = auth_user(request)
   if not user:
     return jsonify({"error": "Unauthorized"}), 401
@@ -60,6 +70,7 @@ def join_raffle(rid):
 
 @bp.post("/<int:rid>/start")
 def start_raffle(rid):
+    """Finaliza o sorteio com o criador e devolve o vencedor."""
     user = auth_user(request)
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
@@ -85,8 +96,10 @@ def start_raffle(rid):
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+
 @bp.get("/<int:rid>")
 def get_raffle(rid):
+    """Retorna detalhes completos do sorteio (participantes + vencedor)."""
     from app.repositories.raffle_repo import get_by_id
     raffle = get_by_id(rid)
 
