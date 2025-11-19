@@ -2,6 +2,15 @@
 
 Aplicação completa de sorteios com backend Flask, frontend Flask + Bootstrap e proxy Nginx com balanceamento entre múltiplas instâncias da API.
 
+## Estrutura do projeto
+
+- `api-sorteio/`: API REST em Flask responsável por autenticação, CRUD de sorteios, inscrição de participantes e escolha do vencedor. Usa SQLAlchemy para mapear `User`, `Raffle` e `RaffleParticipant`, organiza a lógica em camadas (`services`, `repositories`, `routes`) e expõe os endpoints consumidos pelo frontend.
+- `frontend/`: Aplicação Flask que renderiza as telas Bootstrap, mantém sessão do usuário e orquestra o fluxo (login/registro, criação de sorteios, listagem filtrada, detalhe, entrada e início do sorteio) chamando a API via HTTP.
+- `nginx/`: Arquivo `nginx.conf` com o proxy reverso e o load balancer round-robin apontando para as duas instâncias do backend. Também direciona `/api` para a API e `/` para o frontend.
+- `docker-compose.yml`: Orquestra todos os containers, redes e volumes persistentes (como o `db_data` do Postgres).
+- `logs/`: Montado no container do Nginx para inspecionar `access.log` e `error.log` da borda.
+- `scripts/demo_raffle.py`: Script utilitário que dirige um fluxo completo de sorteio chamando a API, excelente para testes e demonstrações automatizadas.
+
 ## Requisitos
 
 - Docker e Docker Compose
@@ -19,6 +28,13 @@ Serviços disponíveis:
 
 - Frontend: http://localhost
 - API (via nginx): http://localhost/api
+
+## Containers e responsabilidades
+
+- `db (sorteio-db)`: Banco Postgres 15 que armazena usuários, sorteios e relações de participação. Possui volume persistente `db_data` para manter os dados entre reinicializações.
+- `api-sorteio-1` e `api-sorteio-2`: Duas réplicas idênticas da API Flask (`api-sorteio/`). Cada uma sobe o mesmo código, conecta no Postgres via `DATABASE_URL`, expõe os endpoints `/api/auth` e `/api/raffles` e garante tolerância a falhas/balanceamento.
+- `frontend (sorteio-frontend)`: Flask server responsável pelas páginas HTML. Consome a API através do hostname `nginx` configurado, mantém sessão do usuário, aplica filtros locais de busca/“meus sorteios” e envia ações (entrar/iniciar).
+- `nginx (sorteio-nginx)`: Proxy reverso exposto na porta 80. Encaminha `/api` para as duas instâncias do backend (balanceamento round-robin) e encaminha as demais rotas para o container `frontend`, além de centralizar logs em `./logs`.
 
 ## Script de teste/demonstração
 
